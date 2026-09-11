@@ -1,0 +1,1250 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Rondes</title>
+<meta name="description" content="Quadern de rondes — anota qui beu què" />
+<meta name="theme-color" content="#1E1712" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1E1712;
+    --surface:#2A211A;
+    --surface-2:#332821;
+    --ink:#EDE6D6;
+    --ink-muted:#B9AD98;
+    --amber:#D9A441;
+    --amber-dark:#C08F34;
+    --danger:#B5533C;
+    --ok:#7A9471;
+    --line: rgba(237,230,214,0.10);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    min-height:100vh;
+    min-height:100dvh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces','Georgia',serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  #app-shell{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+  .hidden{display:none !important;}
+
+  /* ---------- Auth screen ---------- */
+  #auth-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px 28px;
+    text-align:center;
+    gap:22px;
+  }
+  #auth-screen .mark{
+    width:64px;height:64px;
+    border-radius:16px;
+    background:var(--amber);
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;
+  }
+  #auth-screen h1{font-size:32px;margin:0;color:var(--ink);}
+  #auth-screen p{color:var(--ink-muted);margin:0;font-size:15px;line-height:1.5;max-width:32ch;}
+  .btn-google{
+    display:flex;align-items:center;gap:10px;
+    background:var(--ink);
+    color:#1E1712;
+    border:none;
+    padding:13px 22px;
+    border-radius:999px;
+    font-family:'Inter';font-weight:600;font-size:15px;
+    cursor:pointer;
+  }
+  .btn-google:active{transform:scale(0.98);}
+  #auth-error{color:var(--danger); font-size:13px; max-width:32ch;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
+  }
+  header.top .brand{display:flex;flex-direction:column;}
+  header.top .brand h1{font-size:22px;margin:0;color:var(--ink);}
+  header.top .brand span{font-size:12px;color:var(--ink-muted);}
+  .header-actions{display:flex;align-items:center;gap:14px;}
+  .gear-btn{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    width:34px;height:34px;
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .user-chip{display:flex;align-items:center;gap:8px;}
+  .user-chip img{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--amber);}
+  .user-chip button{
+    background:none;border:none;color:var(--ink-muted);
+    font-size:12px;text-decoration:underline;cursor:pointer;padding:0;
+    font-family:'Inter';
+  }
+
+  main{flex:1; padding:18px 16px 90px;}
+
+  .section-title{
+    font-size:13px;
+    color:var(--ink-muted);
+    margin:22px 4px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-title:first-child{margin-top:4px;}
+
+  /* ---------- Bottom tab bar ---------- */
+  #tabbar{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:0;
+    width:100%;
+    max-width:480px;
+    display:flex;
+    background:var(--surface);
+    border-top:1px solid var(--line);
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+    z-index:20;
+  }
+  .tab-btn{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--ink-muted);
+    font-family:'Inter';font-weight:600;font-size:13px;
+    padding:10px 4px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    cursor:pointer;
+    border-radius:12px;
+  }
+  .tab-btn .tab-icon{font-size:18px;}
+  .tab-btn.active{color:var(--amber);}
+
+  /* ---------- Participant grid ---------- */
+  .participant-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .participant-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 12px;
+    text-align:left;
+    cursor:pointer;
+    color:var(--ink);
+    font-family:'Inter';
+    position:relative;
+  }
+  .participant-card:active{background:var(--surface-2);}
+  .participant-name{font-family:'Fraunces';font-weight:600;font-size:16px;margin-bottom:4px;}
+  .participant-meta{font-size:11.5px;color:var(--ink-muted);}
+  .participant-del{
+    position:absolute;top:8px;right:8px;
+    background:none;border:none;color:var(--ink-muted);
+    font-size:14px;cursor:pointer;padding:2px 4px;
+  }
+  .participant-del:hover{color:var(--danger);}
+
+  .add-inline-card{
+    background:var(--surface);
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-muted);
+    font-size:14px;
+    cursor:pointer;
+    min-height:64px;
+  }
+
+  /* ---------- Activity feed ---------- */
+  .activity-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    gap:10px;
+  }
+  .activity-item:last-child{border-bottom:none;}
+  .activity-text b{color:var(--ink); font-weight:600;}
+  .activity-text{color:var(--ink-muted); line-height:1.4;}
+  .activity-sub{color:var(--ink-muted); font-size:11px; margin-top:1px;}
+  .activity-time{color:var(--ink-muted); font-size:11.5px; white-space:nowrap;}
+  .activity-row{display:flex; align-items:center; gap:8px;}
+  .icon-btn{
+    background:none;border:none;color:var(--ink-muted);
+    font-size:16px;cursor:pointer;padding:4px 6px;line-height:1;
+  }
+  .icon-btn.danger{color:var(--danger);}
+
+  .empty-state{
+    color:var(--ink-muted);
+    font-size:14px;
+    text-align:center;
+    padding:30px 10px;
+    line-height:1.6;
+    grid-column:1 / -1;
+  }
+
+  .banner{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:13px;
+    color:var(--ink-muted);
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+  .banner code{
+    background:rgba(237,230,214,0.08);
+    padding:1px 5px;
+    border-radius:4px;
+    font-size:12px;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:80px;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#1E1712;
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    box-shadow:0 6px 20px rgba(0,0,0,0.35);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    z-index:80;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+
+  /* ---------- Overlays (sheet + admin panel) ---------- */
+  .overlay-bg{
+    position:fixed; inset:0;
+    background:rgba(10,7,5,0.6);
+    z-index:60;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .overlay-bg.center{align-items:center; padding:20px;}
+  .sheet{
+    background:var(--bg);
+    width:100%;
+    max-width:480px;
+    border-radius:20px 20px 0 0;
+    max-height:85vh;
+    overflow-y:auto;
+    padding:18px 18px calc(24px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+  }
+  .overlay-bg.center .sheet{
+    border-radius:18px;
+    max-height:80vh;
+  }
+  .sheet-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .sheet-header h2{font-size:19px;margin:0;color:var(--ink);}
+  .picker-subtitle{font-size:12.5px; color:var(--ink-muted); margin-top:2px;}
+  .sheet-close{
+    background:var(--surface-2);
+    border:none;color:var(--ink);
+    width:30px;height:30px;border-radius:50%;
+    font-size:15px;cursor:pointer;
+  }
+
+  .drink-row{
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    margin-bottom:8px;
+    border:1px solid var(--line);
+  }
+  .drink-row-top{display:flex; justify-content:space-between; align-items:center;}
+  .drink-row-name{font-family:'Fraunces';font-size:16px;font-weight:600;}
+  .drink-row-points{font-size:11px;color:var(--ink-muted); margin-top:1px;}
+  .drink-row-controls{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;}
+
+  .stepper{
+    display:flex;align-items:center;gap:0;
+    background:var(--surface-2);
+    border-radius:999px;
+    padding:4px;
+  }
+  .stepper button{
+    width:30px;height:30px;
+    border-radius:999px;
+    border:none;
+    background:transparent;
+    color:var(--ink);
+    font-size:17px;
+    cursor:pointer;
+  }
+  .stepper button:active{background:var(--line);}
+  .stepper .qty{
+    width:26px;text-align:center;
+    font-weight:600;font-size:14px;
+  }
+  .btn-record{
+    background:var(--amber);
+    color:#1E1712;
+    border:none;
+    padding:8px 16px;
+    border-radius:999px;
+    font-family:'Inter';font-weight:700;font-size:13.5px;
+    cursor:pointer;
+  }
+  .btn-record:active{background:var(--amber-dark);}
+
+  /* ---------- Admin panel ---------- */
+  .admin-section-title{
+    font-family:'Fraunces';font-size:16px;font-weight:600;
+    margin:18px 0 8px;
+  }
+  .admin-section-title:first-child{margin-top:0;}
+  .admin-list-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    gap:10px;
+  }
+  .admin-list-row .name{font-weight:600;font-size:14.5px;}
+  .admin-points-input{
+    width:56px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:8px;
+    padding:6px 8px;
+    font-family:'Inter';font-size:13px;
+    text-align:center;
+  }
+  .admin-row-right{display:flex; align-items:center; gap:8px;}
+  .add-form{display:flex; gap:8px; margin-bottom:14px;}
+  .add-form input[type=text]{
+    flex:1;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:10px;
+    padding:10px 12px;
+    font-family:'Inter';font-size:14px;
+  }
+  .add-form input[type=number]{
+    width:64px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:10px;
+    padding:10px 8px;
+    font-family:'Inter';font-size:14px;
+    text-align:center;
+  }
+  .add-form input::placeholder{color:var(--ink-muted);}
+  .add-form button{
+    background:var(--ink);
+    color:#1E1712;
+    border:none;
+    border-radius:10px;
+    padding:0 16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  /* ---------- Ranking ---------- */
+  .rank-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .rank-row:last-child{border-bottom:none;}
+  .rank-num{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;color:var(--ink-muted);
+    flex-shrink:0;
+  }
+  .rank-row:nth-child(1) .rank-num{background:var(--amber); color:#1E1712;}
+  .rank-name{font-family:'Fraunces';font-weight:600;font-size:15px;flex:1;}
+  .rank-sub{font-size:11.5px;color:var(--ink-muted);}
+  .rank-points{font-family:'Fraunces';font-weight:700;font-size:16px;color:var(--amber);white-space:nowrap;}
+
+  .bar-chart-row{margin-bottom:12px;}
+  .bar-chart-label{
+    display:flex; justify-content:space-between;
+    font-size:12.5px; color:var(--ink-muted); margin-bottom:4px;
+  }
+  .bar-chart-label b{color:var(--ink); font-weight:600;}
+  .bar-track{
+    background:var(--surface-2);
+    border-radius:999px;
+    height:10px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--amber);
+    border-radius:999px;
+  }
+
+  .stat-cards{display:flex; gap:10px; margin-bottom:6px;}
+  .stat-card{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 12px;
+    text-align:center;
+  }
+  .stat-card .num{font-family:'Fraunces';font-size:24px;font-weight:700;color:var(--amber);}
+  .stat-card .label{font-size:11.5px;color:var(--ink-muted); margin-top:2px;}
+
+  .btn-reset-danger{
+    width:100%;
+    background:transparent;
+    border:1px solid var(--danger);
+    color:var(--danger);
+    border-radius:12px;
+    padding:11px;
+    font-family:'Inter';font-weight:700;font-size:13.5px;
+    cursor:pointer;
+  }
+  .btn-reset-danger:active{background:rgba(181,83,60,0.12);}
+  .reset-hint{
+    font-size:11.5px;
+    color:var(--ink-muted);
+    margin:8px 2px 0;
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div id="app-shell">
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="mark">🍺</div>
+    <h1>Rondes</h1>
+    <p>El quadern de rondes. Entra amb Google per anotar begudes i veure el recompte.</p>
+    <button class="btn-google" id="google-signin-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.9c1.7-1.57 2.7-3.88 2.7-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.27c-.81.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.95 10.69A5.4 5.4 0 013.68 9c0-.59.1-1.16.27-1.69V4.97H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.03l2.99-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.97l2.99 2.34C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+      Continuar amb Google
+    </button>
+    <div id="auth-error"></div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="hidden">
+    <header class="top">
+      <div class="brand">
+        <h1>Rondes</h1>
+        <span id="role-label"></span>
+      </div>
+      <div class="header-actions">
+        <button class="gear-btn hidden" id="open-admin-btn" title="Gestionar">⚙️</button>
+        <div class="user-chip">
+          <img id="user-photo" src="" alt="" />
+          <button id="signout-btn">Sortir</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div id="admin-bootstrap-banner" class="banner hidden">
+        Ets un usuari nou. Si has de ser l'administrador, obre la Consola de Firebase → Firestore →
+        col·lecció <code>users</code> → el teu document → canvia <code>role</code> a <code>admin</code>, i recarrega.
+      </div>
+
+      <!-- TAB: RONDES -->
+      <div id="tab-rondes">
+        <div class="section-title">Participants</div>
+        <div id="participants-grid" class="participant-grid"></div>
+
+        <div class="section-title">Últimes rondes</div>
+        <div id="activity-list"></div>
+      </div>
+
+      <!-- TAB: RANKING -->
+      <div id="tab-ranking" class="hidden">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="num" id="stat-total-drinks">0</div><div class="label">Begudes anotades</div></div>
+          <div class="stat-card"><div class="num" id="stat-total-points">0</div><div class="label">Punts totals</div></div>
+        </div>
+
+        <div class="section-title">Rànquing</div>
+        <div id="ranking-list"></div>
+
+        <div class="section-title">Per beguda</div>
+        <div id="drink-chart"></div>
+      </div>
+    </main>
+
+    <div id="tabbar">
+      <button class="tab-btn active" data-tab="rondes"><span class="tab-icon">🍻</span>Rondes</button>
+      <button class="tab-btn" data-tab="ranking"><span class="tab-icon">🏆</span>Rànquing</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRINK PICKER / DETAIL SHEET -->
+<div class="overlay-bg hidden" id="picker-overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <div>
+        <h2 id="picker-title">—</h2>
+        <div class="picker-subtitle" id="picker-subtitle"></div>
+      </div>
+      <button class="sheet-close" id="picker-close">✕</button>
+    </div>
+    <div id="picker-drinks"></div>
+
+    <div class="admin-section-title">Historial de la persona</div>
+    <div id="picker-history"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="overlay-bg center hidden" id="admin-overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>Gestionar</h2>
+      <button class="sheet-close" id="admin-close">✕</button>
+    </div>
+
+    <div class="admin-section-title">Participants</div>
+    <form class="add-form" id="add-participant-form">
+      <input type="text" id="new-participant-name" placeholder="Nom del participant" maxlength="30" required />
+      <button type="submit">Afegir</button>
+    </form>
+    <div id="admin-participants-list"></div>
+
+    <div class="admin-section-title">Begudes</div>
+    <form class="add-form" id="add-drink-form">
+      <input type="text" id="new-drink-name" placeholder="Nom de la beguda" maxlength="40" required />
+      <input type="number" id="new-drink-points" placeholder="Punts" min="0" step="1" value="1" required />
+      <button type="submit">Afegir</button>
+    </form>
+    <div id="admin-drinks-list"></div>
+
+    <div class="admin-section-title">Zona de perill</div>
+    <button class="btn-reset-danger" id="reset-stats-btn">Reiniciar comptadors i historial</button>
+    <p class="reset-hint">Esborra totes les rondes anotades i posa els punts i les quantitats a zero. Els participants i les begudes (amb els seus punts) es mantenen.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, getDocs, writeBatch,
+  collection, query, where, orderBy, limit, onSnapshot, serverTimestamp, increment
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyACokQjOdFy0xuzfAs-ycS9hJMpXvBVml8",
+  authDomain: "canyeta-ab120.firebaseapp.com",
+  projectId: "canyeta-ab120",
+  storageBucket: "canyeta-ab120.firebasestorage.app",
+  messagingSenderId: "770281395731",
+  appId: "1:770281395731:web:149380a4ce5d3d1009d1e6",
+  measurementId: "G-LC004PB9SC"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let currentRole = 'user';
+let participants = [];  // [{id, name, totalPoints, totalQty}]
+let drinkTypes = [];    // [{id, name, points, totalCount}]
+let entries = [];       // recent entries desc
+let activeParticipantId = null;
+
+// ---------- Auth ----------
+document.getElementById('google-signin-btn').addEventListener('click', async () => {
+  document.getElementById('auth-error').textContent = '';
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error('popup failed', e);
+    const fallbackCodes = [
+      'auth/popup-blocked',
+      'auth/popup-closed-by-user',
+      'auth/cancelled-popup-request',
+      'auth/operation-not-supported-in-this-environment'
+    ];
+    if (fallbackCodes.includes(e.code)) {
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (e2) {
+        document.getElementById('auth-error').textContent = 'No s\'ha pogut iniciar sessió. Torna-ho a provar.';
+        console.error(e2);
+      }
+    } else {
+      document.getElementById('auth-error').textContent = 'No s\'ha pogut iniciar sessió (' + (e.code || 'error') + ').';
+    }
+  }
+});
+
+getRedirectResult(auth).catch((e) => {
+  document.getElementById('auth-error').textContent =
+    'No s\'ha pogut iniciar sessió (' + (e.code || 'error') + '). Comprova que el domini estigui autoritzat a Firebase.';
+  console.error(e);
+});
+
+document.getElementById('signout-btn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    currentUser = null;
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+    return;
+  }
+  currentUser = user;
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('user-photo').src = user.photoURL || '';
+  try {
+    await ensureUserDoc(user);
+  } catch (err) {
+    console.error('ensureUserDoc failed', err);
+    document.getElementById('role-label').textContent = 'Error de permisos';
+    showToast('Error: ' + (err.code || err.message || 'desconegut'));
+  }
+  listenParticipants();
+  listenDrinkTypes();
+  listenEntries();
+});
+
+async function ensureUserDoc(user) {
+  const ref = doc(db, 'users', user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      name: user.displayName || '',
+      email: user.email || '',
+      photoURL: user.photoURL || '',
+      role: 'user',
+      createdAt: serverTimestamp()
+    });
+    currentRole = 'user';
+    document.getElementById('admin-bootstrap-banner').classList.remove('hidden');
+  } else {
+    currentRole = snap.data().role || 'user';
+    document.getElementById('admin-bootstrap-banner').classList.toggle('hidden', currentRole === 'admin');
+  }
+  document.getElementById('role-label').textContent =
+    currentRole === 'admin' ? 'Administrador' : (user.displayName || '');
+  document.getElementById('open-admin-btn').classList.toggle('hidden', currentRole !== 'admin');
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.getElementById('tab-rondes').classList.toggle('hidden', tab !== 'rondes');
+    document.getElementById('tab-ranking').classList.toggle('hidden', tab !== 'ranking');
+    if (tab === 'ranking') renderRanking();
+  });
+});
+
+// ---------- Participants ----------
+function listenParticipants() {
+  const q = query(collection(db, 'participants'), orderBy('createdAt', 'asc'));
+  onSnapshot(q, (snap) => {
+    participants = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderParticipants();
+    renderRanking();
+  });
+}
+
+document.getElementById('add-participant-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('new-participant-name');
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    await addDoc(collection(db, 'participants'), {
+      name, totalPoints: 0, totalQty: 0,
+      createdAt: serverTimestamp(), createdBy: currentUser.uid
+    });
+    input.value = '';
+    showToast(`"${name}" afegit`);
+  } catch (err) {
+    console.error(err);
+    showToast('No s\'ha pogut afegir');
+  }
+});
+
+async function deleteParticipant(id, name) {
+  if (!confirm(`Esborrar "${name}"? No s'esborrarà l'historial ja anotat.`)) return;
+  try {
+    await deleteDoc(doc(db, 'participants', id));
+    showToast('Participant esborrat');
+  } catch (err) {
+    console.error(err);
+    showToast('No s\'ha pogut esborrar');
+  }
+}
+
+function renderParticipants() {
+  const grid = document.getElementById('participants-grid');
+  if (participants.length === 0) {
+    grid.innerHTML = `<div class="empty-state">${
+      currentRole === 'admin'
+        ? 'Encara no hi ha participants. Afegeix-ne des de ⚙️ Gestionar.'
+        : 'Encara no hi ha participants. Demana a un administrador que n\'afegeixi.'
+    }</div>`;
+    return;
+  }
+  grid.innerHTML = '';
+  participants.forEach(p => {
+    const card = document.createElement('button');
+    card.className = 'participant-card';
+    card.innerHTML = `
+      <div class="participant-name">${escapeHtml(p.name)}</div>
+      <div class="participant-meta">${p.totalPoints || 0} punts · ${p.totalQty || 0} begudes</div>
+    `;
+    card.addEventListener('click', () => openPicker(p.id));
+    grid.appendChild(card);
+  });
+}
+
+function renderAdminParticipants() {
+  const list = document.getElementById('admin-participants-list');
+  if (participants.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:10px 0;">Cap participant encara.</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  participants.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'admin-list-row';
+    row.innerHTML = `
+      <span class="name">${escapeHtml(p.name)}</span>
+      <button class="icon-btn danger" data-del-p="${p.id}" data-name="${escapeHtml(p.name)}">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-del-p]').forEach(btn => {
+    btn.addEventListener('click', () => deleteParticipant(btn.dataset.delP, btn.dataset.name));
+  });
+}
+
+// ---------- Drink types ----------
+function listenDrinkTypes() {
+  const q = query(collection(db, 'drinkTypes'), orderBy('createdAt', 'asc'));
+  onSnapshot(q, (snap) => {
+    drinkTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!document.getElementById('picker-overlay').classList.contains('hidden')) renderPickerDrinks();
+    renderAdminDrinks();
+    renderRanking();
+  });
+}
+
+document.getElementById('add-drink-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nameInput = document.getElementById('new-drink-name');
+  const pointsInput = document.getElementById('new-drink-points');
+  const name = nameInput.value.trim();
+  const points = parseFloat(pointsInput.value);
+  if (!name || isNaN(points) || points < 0) return;
+  try {
+    await addDoc(collection(db, 'drinkTypes'), {
+      name, points, totalCount: 0,
+      createdAt: serverTimestamp(), createdBy: currentUser.uid
+    });
+    nameInput.value = '';
+    pointsInput.value = '1';
+    showToast(`"${name}" afegida`);
+  } catch (err) {
+    console.error(err);
+    showToast('No s\'ha pogut afegir');
+  }
+});
+
+async function deleteDrinkType(id, name) {
+  if (!confirm(`Esborrar "${name}"? No s'esborrarà l'historial ja anotat.`)) return;
+  try {
+    await deleteDoc(doc(db, 'drinkTypes', id));
+    showToast('Beguda esborrada');
+  } catch (err) {
+    console.error(err);
+    showToast('No s\'ha pogut esborrar');
+  }
+}
+
+async function updateDrinkPoints(id, newPoints) {
+  if (isNaN(newPoints) || newPoints < 0) return;
+  const dt = drinkTypes.find(d => d.id === id);
+  const oldPoints = dt?.points ?? 1;
+  if (oldPoints === newPoints) return;
+
+  try {
+    const snap = await getDocs(query(collection(db, 'entries'), where('drinkTypeId', '==', id)));
+    const participantDeltas = {};
+    let batch = writeBatch(db);
+    let ops = 0;
+    const flush = async () => { if (ops > 0) { await batch.commit(); batch = writeBatch(db); ops = 0; } };
+
+    for (const d of snap.docs) {
+      const data = d.data();
+      const qty = data.quantity || 0;
+      const newEntryPoints = qty * newPoints;
+      const delta = newEntryPoints - (data.points || 0);
+      batch.update(d.ref, { points: newEntryPoints });
+      ops++;
+      if (ops >= 450) await flush();
+      participantDeltas[data.participantId] = (participantDeltas[data.participantId] || 0) + delta;
+    }
+    await flush();
+
+    for (const [pid, delta] of Object.entries(participantDeltas)) {
+      if (delta !== 0) {
+        batch.update(doc(db, 'participants', pid), { totalPoints: increment(delta) });
+        ops++;
+        if (ops >= 450) await flush();
+      }
+    }
+    await flush();
+
+    await updateDoc(doc(db, 'drinkTypes', id), { points: newPoints });
+    showToast('Punts actualitzats i recalculats a tot l\'historial');
+  } catch (err) {
+    console.error(err);
+    showToast('No s\'han pogut actualitzar els punts');
+  }
+}
+
+function renderAdminDrinks() {
+  const list = document.getElementById('admin-drinks-list');
+  if (drinkTypes.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:10px 0;">Cap beguda encara.</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  drinkTypes.forEach(dt => {
+    const row = document.createElement('div');
+    row.className = 'admin-list-row';
+    row.innerHTML = `
+      <span class="name">${escapeHtml(dt.name)}</span>
+      <div class="admin-row-right">
+        <input type="number" class="admin-points-input" min="0" step="1" value="${dt.points ?? 1}" data-points-id="${dt.id}" />
+        <button class="icon-btn danger" data-del-d="${dt.id}" data-name="${escapeHtml(dt.name)}">✕</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-points-id]').forEach(inp => {
+    inp.addEventListener('change', () => updateDrinkPoints(inp.dataset.pointsId, parseFloat(inp.value)));
+  });
+  list.querySelectorAll('[data-del-d]').forEach(btn => {
+    btn.addEventListener('click', () => deleteDrinkType(btn.dataset.delD, btn.dataset.name));
+  });
+}
+
+// ---------- Drink picker / detail sheet ----------
+function openPicker(participantId) {
+  activeParticipantId = participantId;
+  const p = participants.find(x => x.id === participantId);
+  if (!p) return;
+  document.getElementById('picker-title').textContent = p.name;
+  document.getElementById('picker-subtitle').textContent = `${p.totalPoints || 0} punts · ${p.totalQty || 0} begudes`;
+  renderPickerDrinks();
+  renderPickerHistory();
+  document.getElementById('picker-overlay').classList.remove('hidden');
+}
+function closePicker() {
+  document.getElementById('picker-overlay').classList.add('hidden');
+  activeParticipantId = null;
+}
+document.getElementById('picker-close').addEventListener('click', closePicker);
+document.getElementById('picker-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'picker-overlay') closePicker();
+});
+
+function renderPickerHistory() {
+  const wrap = document.getElementById('picker-history');
+  if (!activeParticipantId) return;
+  const mine = entries.filter(e => e.participantId === activeParticipantId);
+  if (mine.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">Encara no se li ha anotat cap beguda.</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  mine.forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'activity-item';
+    row.innerHTML = `
+      <div>
+        <div class="activity-text"><b>${e.quantity} × ${escapeHtml(e.drinkTypeName || '')}</b> — ${e.points ?? 0} pt</div>
+        <div class="activity-sub">anotat per ${escapeHtml(e.loggedByName || 'algú')}</div>
+      </div>
+      <div class="activity-row">
+        <span class="activity-time">${formatTime(e.createdAt)}</span>
+        ${`<button class="icon-btn danger" data-del-hist-entry="${e.id}">✕</button>`}
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-del-hist-entry]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Esborrar aquesta anotació?')) return;
+      try {
+        await deleteDoc(doc(db, 'entries', btn.dataset.delHistEntry));
+        showToast('Anotació esborrada');
+      } catch (err) {
+        console.error(err);
+        showToast('No s\'ha pogut esborrar');
+      }
+    });
+  });
+}
+
+function countForActiveParticipant(drinkTypeId) {
+  return entries
+    .filter(e => e.participantId === activeParticipantId && e.drinkTypeId === drinkTypeId)
+    .reduce((s, e) => s + (e.quantity || 0), 0);
+}
+
+function renderPickerDrinks() {
+  const wrap = document.getElementById('picker-drinks');
+  if (drinkTypes.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">${
+      currentRole === 'admin'
+        ? 'Encara no hi ha begudes. Afegeix-ne des de ⚙️ Gestionar.'
+        : 'Encara no hi ha begudes. Demana a un administrador que n\'afegeixi.'
+    }</div>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  drinkTypes.forEach(dt => {
+    const count = countForActiveParticipant(dt.id);
+    const row = document.createElement('div');
+    row.className = 'drink-row';
+    row.innerHTML = `
+      <div class="drink-row-top">
+        <div>
+          <div class="drink-row-name">${escapeHtml(dt.name)}</div>
+          <div class="drink-row-points">${dt.points ?? 1} pt${(dt.points ?? 1) === 1 ? '' : 's'} cada una</div>
+        </div>
+      </div>
+      <div class="drink-row-controls">
+        <div class="stepper">
+          <button data-minus="${dt.id}">−</button>
+          <span class="qty" id="pqty-${dt.id}">${count}</span>
+          <button data-plus="${dt.id}">+</button>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-plus]').forEach(btn => {
+    btn.addEventListener('click', () => adjustEntry(btn.dataset.plus, 1));
+  });
+  wrap.querySelectorAll('[data-minus]').forEach(btn => {
+    btn.addEventListener('click', () => adjustEntry(btn.dataset.minus, -1));
+  });
+}
+
+async function adjustEntry(drinkTypeId, delta) {
+  const dt = drinkTypes.find(d => d.id === drinkTypeId);
+  const p = participants.find(x => x.id === activeParticipantId);
+  if (!dt || !p) return;
+  const unitPoints = dt.points ?? 1;
+
+  try {
+    if (delta > 0) {
+      await addDoc(collection(db, 'entries'), {
+        drinkTypeId, drinkTypeName: dt.name,
+        participantId: p.id, participantName: p.name,
+        quantity: 1, points: unitPoints,
+        loggedByUid: currentUser.uid, loggedByName: currentUser.displayName || 'Algú',
+        createdAt: serverTimestamp()
+      });
+      await updateDoc(doc(db, 'drinkTypes', drinkTypeId), { totalCount: increment(1) });
+      await updateDoc(doc(db, 'participants', p.id), {
+        totalPoints: increment(unitPoints), totalQty: increment(1)
+      });
+      showToast(`${p.name}: +1 × ${dt.name}`);
+    } else {
+      const mine = entries
+        .filter(e => e.participantId === p.id && e.drinkTypeId === drinkTypeId)
+        .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      const target = mine[0];
+      if (!target) return;
+      if ((target.quantity || 0) <= 1) {
+        await deleteDoc(doc(db, 'entries', target.id));
+      } else {
+        await updateDoc(doc(db, 'entries', target.id), {
+          quantity: increment(-1), points: increment(-unitPoints)
+        });
+      }
+      await updateDoc(doc(db, 'drinkTypes', drinkTypeId), { totalCount: increment(-1) });
+      await updateDoc(doc(db, 'participants', p.id), {
+        totalPoints: increment(-unitPoints), totalQty: increment(-1)
+      });
+      showToast(`${p.name}: −1 × ${dt.name}`);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast(delta > 0 ? 'No s\'ha pogut anotar' : 'No s\'ha pogut restar');
+  }
+}
+
+// ---------- Admin overlay ----------
+document.getElementById('open-admin-btn').addEventListener('click', () => {
+  renderAdminParticipants();
+  renderAdminDrinks();
+  document.getElementById('admin-overlay').classList.remove('hidden');
+});
+document.getElementById('admin-close').addEventListener('click', () => {
+  document.getElementById('admin-overlay').classList.add('hidden');
+});
+document.getElementById('admin-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'admin-overlay') document.getElementById('admin-overlay').classList.add('hidden');
+});
+
+document.getElementById('reset-stats-btn').addEventListener('click', resetAllStats);
+
+async function resetAllStats() {
+  const sure = confirm('Segur que vols esborrar TOT l\'historial de rondes i posar els comptadors a zero? Els participants i les begudes es mantenen. Aquesta acció no es pot desfer.');
+  if (!sure) return;
+  try {
+    const entriesSnap = await getDocs(collection(db, 'entries'));
+    let batch = writeBatch(db);
+    let ops = 0;
+    const flush = async () => { if (ops > 0) { await batch.commit(); batch = writeBatch(db); ops = 0; } };
+
+    for (const d of entriesSnap.docs) {
+      batch.delete(d.ref);
+      ops++;
+      if (ops >= 450) await flush();
+    }
+    for (const p of participants) {
+      batch.update(doc(db, 'participants', p.id), { totalPoints: 0, totalQty: 0 });
+      ops++;
+      if (ops >= 450) await flush();
+    }
+    for (const dt of drinkTypes) {
+      batch.update(doc(db, 'drinkTypes', dt.id), { totalCount: 0 });
+      ops++;
+      if (ops >= 450) await flush();
+    }
+    await flush();
+    showToast('Comptadors i historial reiniciats');
+    document.getElementById('admin-overlay').classList.add('hidden');
+  } catch (err) {
+    console.error(err);
+    showToast('No s\'ha pogut reiniciar');
+  }
+}
+
+// ---------- Activity feed ----------
+function listenEntries() {
+  const q = query(collection(db, 'entries'), orderBy('createdAt', 'desc'), limit(500));
+  onSnapshot(q, (snap) => {
+    entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderActivity();
+    renderRanking();
+    if (activeParticipantId && !document.getElementById('picker-overlay').classList.contains('hidden')) {
+      const p = participants.find(x => x.id === activeParticipantId);
+      if (p) document.getElementById('picker-subtitle').textContent = `${p.totalPoints || 0} punts · ${p.totalQty || 0} begudes`;
+      renderPickerDrinks();
+      renderPickerHistory();
+    }
+  });
+}
+
+function renderActivity() {
+  const list = document.getElementById('activity-list');
+  if (entries.length === 0) {
+    list.innerHTML = `<div class="empty-state">Encara no s'ha anotat cap ronda.</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  entries.slice(0, 20).forEach(e => {
+    const row = document.createElement('div');
+    row.className = 'activity-item';
+    row.innerHTML = `
+      <div>
+        <div class="activity-text"><b>${escapeHtml(e.participantName || '—')}</b> — ${e.quantity} × ${escapeHtml(e.drinkTypeName || '')}</div>
+        <div class="activity-sub">anotat per ${escapeHtml(e.loggedByName || 'algú')}</div>
+      </div>
+      <div class="activity-row">
+        <span class="activity-time">${formatTime(e.createdAt)}</span>
+        ${`<button class="icon-btn danger" data-del-entry="${e.id}">✕</button>`}
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-del-entry]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Esborrar aquesta anotació?')) return;
+      try {
+        await deleteDoc(doc(db, 'entries', btn.dataset.delEntry));
+        showToast('Anotació esborrada');
+      } catch (err) {
+        console.error(err);
+        showToast('No s\'ha pogut esborrar');
+      }
+    });
+  });
+}
+
+// ---------- Ranking tab ----------
+function renderRanking() {
+  if (document.getElementById('tab-ranking').classList.contains('hidden')) return;
+
+  const totalDrinks = participants.reduce((s, p) => s + (p.totalQty || 0), 0);
+  const totalPoints = participants.reduce((s, p) => s + (p.totalPoints || 0), 0);
+  document.getElementById('stat-total-drinks').textContent = totalDrinks;
+  document.getElementById('stat-total-points').textContent = totalPoints;
+
+  const rankList = document.getElementById('ranking-list');
+  if (participants.length === 0) {
+    rankList.innerHTML = `<div class="empty-state">Encara no hi ha dades.</div>`;
+  } else {
+    const sorted = [...participants].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+    rankList.innerHTML = '';
+    sorted.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'rank-row';
+      row.style.cursor = 'pointer';
+      row.innerHTML = `
+        <div class="rank-num">${i + 1}</div>
+        <div>
+          <div class="rank-name">${escapeHtml(p.name)}</div>
+          <div class="rank-sub">${p.totalQty || 0} begudes</div>
+        </div>
+        <div class="rank-points">${p.totalPoints || 0} pt</div>
+      `;
+      row.addEventListener('click', () => openPicker(p.id));
+      rankList.appendChild(row);
+    });
+  }
+
+  const chartWrap = document.getElementById('drink-chart');
+  if (drinkTypes.length === 0) {
+    chartWrap.innerHTML = `<div class="empty-state">Encara no hi ha begudes.</div>`;
+  } else {
+    const sortedDrinks = [...drinkTypes].sort((a, b) => (b.totalCount || 0) - (a.totalCount || 0));
+    const max = Math.max(1, ...sortedDrinks.map(d => d.totalCount || 0));
+    chartWrap.innerHTML = '';
+    sortedDrinks.forEach(dt => {
+      const pct = Math.round(((dt.totalCount || 0) / max) * 100);
+      const row = document.createElement('div');
+      row.className = 'bar-chart-row';
+      row.innerHTML = `
+        <div class="bar-chart-label"><b>${escapeHtml(dt.name)}</b><span>${dt.totalCount || 0}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      `;
+      chartWrap.appendChild(row);
+    });
+  }
+}
+
+// ---------- Helpers ----------
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'ara mateix';
+  if (diffMin < 60) return `fa ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `fa ${diffH} h`;
+  return d.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' });
+}
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ---------- Service worker ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
